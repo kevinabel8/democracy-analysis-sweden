@@ -19,6 +19,7 @@ Das Ziel ist ein Vergleich verschiedener Demokratie-Indizes im Verhältnis zur p
   * Partizipative Demokratie (`v2x_partipdem`)
   * Egalitäre Demokratie (`v2x_egaldem`)
   * Physical Integrity Index (`v2x_clphy`)
+  * Rechtsstaatlichkeit / Rule of Law (`v2x_rule`)
 
 ---
 *Autor: Kevin Abel*
