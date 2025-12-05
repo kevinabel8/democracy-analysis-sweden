@@ -1,0 +1,89 @@
+---
+title: "Analyse der Demokratiequalität in Schweden (1990-2024)"
+Autor: "Kevin Abel"
+Datenbasis: "V-Dem Dataset v15"
+format: html
+---
+
+# Bibliothek laden
+
+```{r}
+library(tidyverse)
+library(easystats)
+library(strengejacke)
+```
+
+# Daten importieren
+
+```{r}
+#Pfad muss lokal angepasst werden
+Vdem <- read_spss(path="V-Dem-CY-Full+Others-v15.sav")
+```
+
+# Datenbereinigung & Variablenauswahl
+
+```{r}
+sweden_data <- Vdem %>% 
+#filtern von Schweden und dem Zeitraum nach 1990
+  filter(country_name == "Sweden", year >= "1990") %>%
+#Wählen der benötigten Variablen  
+  select(
+    country_name, 
+    year, 
+    v2caviol,               # Politische Gewalt
+    v2x_partipdem,          # Pratizipative Demokratie
+    v2x_egaldem,            # Egalitäre Demokratie
+    v2x_rule                # Rule of Law
+    )
+```
+
+# Feature Engineerung
+
+```{r}
+sweden_analysis <- sweden_data %>%
+    mutate(
+    #Erstellen der vier zeitlichen Eingrenzungen
+    decade = rec(year, rec = "1990:1999=1 (90er); 
+                              2000:2009=2 (00er); 
+                              2010:2019=3 (10er); 
+                              2020:2024=4 (20er)",
+                 var.label = "Dekade", as.num = FALSE),
+    #Normalisierung
+    pol_violence_norm = v2caviol / 5)  #Original-Skala = 0-5
+```
+
+# Aggregation (Mittelwerte bilden)
+
+```{r}
+decade_summary <- sweden_analysis %>%
+  group_by(decade) %>%
+  summarise(
+            mean_partipdem = mean(v2x_partipdem, na.rm = TRUE), 
+            mean_egaldem = mean(v2x_egaldem, na.rm = TRUE),
+            mean_violence = mean(pol_violence_norm, na.rm = TRUE),
+            mean_rul = mean(v2x_rule, na.rm = TRUE))
+
+#Ausgabe der Tabelle in der Konsole
+print(decade_summary)
+```
+
+# Visualisierung
+
+```{r}
+plot_democracy <- ggplot(sweden_analysis, aes(x = year)) +
+  geom_line(aes(y = v2x_partipdem, color = "Partizipative Demokratie"), linewidth = 1.2) +
+  geom_line(aes(y = v2x_egaldem, color = "Egalitäre Demokratie"), linewidth = 1.2) +
+  labs(
+    title = "Entwicklung der Demokratiequalität in Schweden",
+    subtitle = "Vergleich von Partizipation und Egalitarismus (1990-2024",
+    y= "Index (0-1)",
+    x= "Jahr",
+    color = "Indikator",
+    caption = "Datenquelle: V-Dem v15 | Analyse: Kevin Abel"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+#Plot anzeigen
+print(plot_democracy)
+```
